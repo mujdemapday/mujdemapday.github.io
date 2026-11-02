@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eczane WhatsApp Haber Ver</title>
+<meta name="description" content="İlacı gelince müşteriye otomatik WhatsApp mesajı · Mapday.ai demosu.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:site_name" content="Eczane WhatsApp Haber Ver">
+<meta property="og:title" content="Eczane WhatsApp Haber Ver">
+<meta property="og:description" content="İlacı gelince müşteriye otomatik WhatsApp mesajı · Mapday.ai demosu.">
+<meta property="og:image" content="https://mujdemapday.github.io/eczane/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://mujdemapday.github.io/eczane/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20100%20100'%3E%3Ctext%20y%3D'.9em'%20font-size%3D'90'%3E%F0%9F%92%8A%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: iki sütun — solda eczane tezgâh ekranı, sağda müşterinin telefonu; altta akış şeridi ve "kim ne yapar" kartları */
+:root {
+  --bg: #F3F6F5;
+  --panel: #FFFFFF;
+  --fg: #16201C;
+  --muted: #5D6B65;
+  --line: #D9E1DE;
+  --accent: #C3122F;      /* eczane tabelası kırmızısı */
+  --accent-soft: #FBE7EA;
+  --ok: #1D7A4B;
+  --ok-soft: #E2F3EA;
+  --wait: #9A6200;
+  --wait-soft: #FCF1DC;
+  --phone: #0F1714;
+  --chat-bg: #E9EFEC;
+  --bubble: #FFFFFF;
+  --bubble-fg: #16201C;
+  --font-display: "Sora", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1513; --panel: #17201D; --fg: #E7EEEB; --muted: #9AA8A2; --line: #2B3733;
+    --accent: #F0566F; --accent-soft: #3A1C22; --ok: #5BC98E; --ok-soft: #173326;
+    --wait: #E7B45A; --wait-soft: #3A2E17; --phone: #050807; --chat-bg: #1C2622;
+    --bubble: #26322D; --bubble-fg: #E7EEEB; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1513; --panel: #17201D; --fg: #E7EEEB; --muted: #9AA8A2; --line: #2B3733;
+  --accent: #F0566F; --accent-soft: #3A1C22; --ok: #5BC98E; --ok-soft: #173326;
+  --wait: #E7B45A; --wait-soft: #3A2E17; --phone: #050807; --chat-bg: #1C2622;
+  --bubble: #26322D; --bubble-fg: #E7EEEB; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 40px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 24px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(1.5rem, 3vw, 2rem); letter-spacing: -0.01em; }
+h2 { font-size: 1.05rem; }
+.lede { color: var(--muted); max-width: 65ch; margin: 6px 0 0; }
+.tag { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.cross { width: 18px; height: 18px; position: relative; display: inline-block; }
+.cross::before, .cross::after { content: ""; position: absolute; background: var(--accent); border-radius: 2px; }
+.cross::before { left: 6px; top: 0; width: 6px; height: 18px; }
+.cross::after { top: 6px; left: 0; width: 18px; height: 6px; }
+
+/* akış şeridi */
+.flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.step { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 13px; transition: border-color .25s, background .25s; min-width: 0; }
+.step b { display: block; font-family: var(--font-display); font-size: 13px; }
+.step span { color: var(--muted); }
+.step.on { border-color: var(--ok); background: var(--ok-soft); }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.counter { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 16px; min-width: 0; }
+.counter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.counter-head small { color: var(--muted); }
+
+form { display: grid; grid-template-columns: 1.1fr 1.1fr 1fr auto; gap: 8px; align-items: end; }
+label { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); min-width: 0; }
+input { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; }
+input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button { font: inherit; font-weight: 600; border-radius: 8px; border: 1px solid transparent; padding: 8px 14px; cursor: pointer; }
+.btn-add { background: var(--fg); color: var(--bg); }
+.btn-go { background: var(--accent); color: #fff; white-space: nowrap; }
+.btn-go:disabled { background: var(--line); color: var(--muted); cursor: default; }
+.btn-ghost { background: transparent; border-color: var(--line); color: var(--muted); font-size: 13px; padding: 6px 10px; }
+
+.list { display: grid; gap: 8px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
+.row.active { border-color: var(--accent); }
+.who { min-width: 0; }
+.who b { display: block; }
+.who .meta { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.pill { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.pill.wait { background: var(--wait-soft); color: var(--wait); }
+.pill.sent { background: var(--ok-soft); color: var(--ok); }
+
+/* telefon */
+.phone-col { display: grid; gap: 10px; justify-items: center; min-width: 0; }
+.phone-col > p { margin: 0; color: var(--muted); font-size: 13px; text-align: center; }
+.phone { width: min(320px, 100%); aspect-ratio: 9 / 17; max-width: 100%; background: var(--phone); border-radius: 36px; padding: 10px; position: relative; box-shadow: 0 18px 40px -18px rgba(0,0,0,.45); }
+.screen { background: var(--chat-bg); border-radius: 28px; height: 100%; overflow: hidden; display: grid; grid-template-rows: auto 1fr; position: relative; }
+.bar { background: var(--panel); padding: 26px 14px 10px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); display: grid; place-items: center; flex: none; }
+.avatar .cross { transform: scale(.75); }
+.bar b { display: block; font-size: 14px; }
+.bar small { color: var(--muted); font-size: 12px; }
+.chat { padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; justify-content: flex-end; }
+.empty { color: var(--muted); font-size: 13px; text-align: center; margin: auto 0; }
+.bubble { background: var(--bubble); color: var(--bubble-fg); border-radius: 12px 12px 12px 4px; padding: 9px 11px 6px; font-size: 13.5px; max-width: 88%; box-shadow: 0 1px 1px rgba(0,0,0,.08); animation: pop .35s ease-out; }
+.bubble time { display: block; text-align: right; color: var(--muted); font-size: 11px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.toast { position: absolute; top: 34px; left: 10px; right: 10px; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 14px; padding: 9px 11px; font-size: 12.5px; box-shadow: 0 8px 20px -10px rgba(0,0,0,.4); transform: translateY(-140%); transition: transform .35s ease; }
+.toast.show { transform: translateY(0); }
+.toast b { display: block; font-size: 12px; }
+@keyframes pop { from { transform: scale(.92); opacity: .4; } to { transform: none; opacity: 1; } }
+
+/* kim ne yapar */
+.roles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.role { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.role h3 { font-size: 14px; }
+.role p { margin: 0; font-size: 13.5px; color: var(--muted); }
+.cost { font-size: 12px; font-weight: 600; color: var(--ok); }
+.cost.paid { color: var(--wait); }
+.note { font-size: 12.5px; color: var(--muted); }
+
+@media (max-width: 860px) {
+  .stage { grid-template-columns: minmax(0, 1fr); }
+  .roles, .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  form .btn-add { grid-column: 1 / -1; }
+}
+@media (max-width: 460px) {
+  .roles, .flow { grid-template-columns: minmax(0, 1fr); }
+  form { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bubble { animation: none; } .toast, .step { transition: none; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="tag"><span class="cross" aria-hidden="true"></span>Örnek Eczane · Bornova</div>
+    <h1>İlaç gelince müşteriye otomatik haber</h1>
+    <p class="lede">Soldaki ekran eczacının tezgâhta kullandığı sayfa. Bir hastanın yanındaki <b>İlaç geldi</b> düğmesine basın: sağdaki telefona müşteriye giden mesaj düşer. Tüm isimler ve numaralar örnektir; bu sayfa gerçek mesaj göndermez.</p>
+  </header>
+
+  <div class="flow" aria-label="Mesajın izlediği yol">
+    <div class="step" id="s1"><b>1 · Eczane ekranı</b><span>Eczacı "İlaç geldi"ye basar</span></div>
+    <div class="step" id="s2"><b>2 · n8n</b><span>Otomasyon mesajı hazırlar</span></div>
+    <div class="step" id="s3"><b>3 · WhatsApp İşletme</b><span>Mesaj eczanenin numarasından çıkar</span></div>
+    <div class="step" id="s4"><b>4 · Müşteri</b><span>Telefonuna bildirim gelir</span></div>
+  </div>
+
+  <section class="stage">
+    <div class="counter">
+      <div class="counter-head">
+        <h2>Haber bekleyen müşteriler</h2>
+        <small id="count"></small>
+      </div>
+      <form id="add" autocomplete="off">
+        <label for="f-name">Müşteri adı<input id="f-name" placeholder="Örn. Zeynep Aksoy" required></label>
+        <label for="f-drug">Beklenen ilaç<input id="f-drug" placeholder="Örn. Augmentin 1000 mg" required></label>
+        <label for="f-tel">Telefon<input id="f-tel" placeholder="05xx xxx xx xx" inputmode="tel" required></label>
+        <button class="btn-add" type="submit">Listeye ekle</button>
+      </form>
+      <div class="list" id="list"></div>
+      <div><button class="btn-ghost" id="reset" type="button">Demoyu baştan başlat</button></div>
+    </div>
+
+    <div class="phone-col">
+      <div class="phone" aria-live="polite">
+        <div class="screen">
+          <div class="toast" id="toast"><b>Örnek Eczane</b><span id="toast-text"></span></div>
+          <div class="bar">
+            <div class="avatar"><span class="cross" aria-hidden="true"></span></div>
+            <div><b>Örnek Eczane</b><small>İşletme hesabı</small></div>
+          </div>
+          <div class="chat" id="chat"></div>
+        </div>
+      </div>
+      <p id="phone-owner">Müşterinin telefonu</p>
+    </div>
+  </section>
+
+  <section>
+    <h2 style="margin-bottom:12px">Gerçek kurulumda kim ne yapar?</h2>
+    <div class="roles">
+      <div class="role"><h3>Eczane ekranı</h3><p>Eczacının müşteri ve ilaç girdiği sayfa. Mapday hazırlar.</p><span class="cost">Ücretsiz</span></div>
+      <div class="role"><h3>n8n</h3><p>"İlaç geldi" sinyalini alıp mesajı gönderen otomasyon. WhatsApp bağlantısı buraya yapılır.</p><span class="cost">Kendi bilgisayarında ücretsiz · bulut sürümü aylık ücretli</span></div>
+      <div class="role"><h3>WhatsApp İşletme (Meta)</h3><p>Mesajın çıktığı resmi kanal. Demo için Meta'nın ücretsiz test numarası yeterli; gerçekte eczanenin kendi numarası bağlanır.</p><span class="cost paid">Demo ücretsiz · gerçekte mesaj başına küçük ücret</span></div>
+      <div class="role"><h3>Müşteri</h3><p>Tezgâhta "haber verin" diyerek numarasını bırakır ve izin verir. Mesaj reklam değil, hizmettir.</p><span class="cost">Hiçbir şey kurmaz</span></div>
+    </div>
+  </section>
+  <p class="note">Bu sayfa satış görüşmelerinde göstermek içindir. Gösterilen akış temsilidir; gerçek mesaj gönderimi n8n ve WhatsApp İşletme hesabı bağlandığında çalışır.</p>
+</div>
+
+<script>
+(function () {
+  var SAMPLE = [
+    { name: "Ahmet Yılmaz", hitap: "Ahmet Bey", drug: "Coraspin 100 mg", tel: "0532 000 00 01" },
+    { name: "Ayşe Kara", hitap: "Ayşe Hanım", drug: "Glifor 1000 mg", tel: "0533 000 00 02" },
+    { name: "Mehmet Demir", hitap: "Mehmet Bey", drug: "Beloc Zok 50 mg", tel: "0544 000 00 03" }
+  ];
+  var people, chats, activeIdx;
+  var listEl = document.getElementById("list");
+  var chatEl = document.getElementById("chat");
+  var countEl = document.getElementById("count");
+  var ownerEl = document.getElementById("phone-owner");
+  var toast = document.getElementById("toast");
+  var toastText = document.getElementById("toast-text");
+  var steps = ["s1", "s2", "s3", "s4"].map(function (id) { return document.getElementById(id); });
+
+  function clone(a) { return a.map(function (p) { return Object.assign({ sent: null }, p); }); }
+  function now() { var d = new Date(); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function hitapOf(name) { var first = name.trim().split(/\s+/)[0] || name; return first; }
+
+  function start() {
+    people = clone(SAMPLE); chats = people.map(function () { return []; }); activeIdx = 0;
+    steps.forEach(function (s) { s.classList.remove("on"); });
+    render();
+  }
+
+  function render() {
+    var waiting = people.filter(function (p) { return !p.sent; }).length;
+    countEl.textContent = waiting + " bekliyor · " + (people.length - waiting) + " haber verildi";
+    listEl.innerHTML = people.map(function (p, i) {
+      var status = p.sent ? '<span class="pill sent">Mesaj gitti · ' + p.sent + '</span>' : '<span class="pill wait">Bekliyor</span>';
+      var btn = '<button class="btn-go" type="button" data-i="' + i + '"' + (p.sent ? " disabled" : "") + '>İlaç geldi</button>';
+      return '<div class="row' + (i === activeIdx ? " active" : "") + '"><div class="who"><b>' + esc(p.name) + '</b><span class="meta">' + esc(p.drug) + ' · ' + esc(p.tel) + '</span></div><div class="right">' + status + btn + '</div></div>';
+    }).join("");
+    renderPhone();
+  }
+
+  function renderPhone() {
+    var p = people[activeIdx];
+    ownerEl.textContent = p ? p.name + " — müşterinin telefonu" : "Müşterinin telefonu";
+    var msgs = chats[activeIdx] || [];
+    chatEl.innerHTML = msgs.length ? msgs.map(function (m) { return '<div class="bubble">' + esc(m.text) + '<time>' + m.time + '</time></div>'; }).join("")
+      : '<p class="empty">Henüz mesaj yok. Soldan "İlaç geldi"ye basın.</p>';
+  }
+
+  function message(p) {
+    return "Merhaba " + p.hitap + ", beklediğiniz " + p.drug + " eczanemize ulaştı. Sizin adınıza ayırdık; 3 gün içinde uğrayabilirsiniz. Örnek Eczane · Bornova";
+  }
+
+  function send(i) {
+    var p = people[i]; if (!p || p.sent) return;
+    activeIdx = i; p.sent = now();
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var delay = reduce ? 0 : 380;
+    steps.forEach(function (s) { s.classList.remove("on"); });
+    steps.forEach(function (s, k) { setTimeout(function () { s.classList.add("on"); }, delay * k); });
+    render();
+    setTimeout(function () {
+      var text = message(p);
+      chats[i].push({ text: text, time: p.sent });
+      toastText.textContent = text.slice(0, 60) + "…";
+      toast.classList.add("show");
+      renderPhone();
+      setTimeout(function () { toast.classList.remove("show"); }, 2600);
+    }, delay * 3);
+  }
+
+  listEl.addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-i]");
+    if (b) { send(Number(b.dataset.i)); return; }
+    var row = e.target.closest(".row");
+    if (row) { activeIdx = Array.prototype.indexOf.call(listEl.children, row); render(); }
+  });
+
+  document.getElementById("add").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var n = document.getElementById("f-name"), d = document.getElementById("f-drug"), t = document.getElementById("f-tel");
+    if (!n.value.trim() || !d.value.trim() || !t.value.trim()) return;
+    people.push({ name: n.value.trim(), hitap: hitapOf(n.value), drug: d.value.trim(), tel: t.value.trim(), sent: null });
+    chats.push([]); activeIdx = people.length - 1;
+    n.value = ""; d.value = ""; t.value = "";
+    render();
+  });
+
+  document.getElementById("reset").addEventListener("click", start);
+  start();
+})();
+</script>
