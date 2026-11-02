@@ -14,42 +14,43 @@
   main{max-width:560px;width:100%;text-align:center}
   h1{font:600 clamp(32px,7vw,46px)/1.1 Georgia,serif;margin:0 0 10px}
   p.alt{color:#7C6656;margin:0 0 30px}
-  .klasor{display:block;text-decoration:none;color:inherit;background:#fff;border-radius:22px;padding:24px 22px;margin:16px 0;box-shadow:0 16px 38px -24px rgba(90,50,20,.55);transition:transform .15s}
+  .klasor{display:block;color:inherit;background:#fff;border-radius:22px;padding:24px 22px;margin:16px 0;box-shadow:0 16px 38px -24px rgba(90,50,20,.55);transition:transform .15s}
   .klasor:hover{transform:translateY(-3px)}
-  .klasor .ust{display:flex;align-items:center;justify-content:center;gap:12px;font-size:24px;font-weight:700}
+  .klasor .ust{text-decoration:none;color:inherit;display:flex;align-items:center;justify-content:center;gap:12px;font-size:24px;font-weight:700}
   .klasor .ust i{font-style:normal;font-size:34px}
   .klasor small{display:block;color:#7C6656;font-size:14.5px;margin-top:4px}
   .cipler{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:14px}
-  .cipler span{font-size:13.5px;font-weight:600;padding:6px 14px;border-radius:999px;background:#F5EADC;color:#9C5E27}
-  .guz .cipler span{background:#FCE4EC;color:#C2255A}
+  .cipler a{text-decoration:none;font-size:13.5px;font-weight:600;padding:6px 14px;border-radius:999px;background:#F5EADC;color:#9C5E27}
+  .guz .cipler a{text-decoration:none;background:#FCE4EC;color:#C2255A}
   .mapday{background:linear-gradient(160deg,#0E1A33,#1F3563);color:#fff}
   .mapday small{color:#C9D3E8}
-  .mapday .cipler span{background:rgba(244,213,141,.16);color:#F4D58D}
+  .cipler a:hover{filter:brightness(.93)}
+  .mapday .cipler a{text-decoration:none;background:rgba(244,213,141,.16);color:#F4D58D}
 </style>
 </head>
 <body>
 <main>
   <h1>Mapday demo siteler</h1>
   <p class="alt">İşletmeniz için hazırladığımız örnek siteler. Bir sektör seçin.</p>
-  <a class="klasor mapday" href="mapday/">
-    <div class="ust"><i>✨</i>Mapday.ai</div>
+  <div class="klasor mapday">
+    <a class="ust" href="mapday/"><i>✨</i>Mapday.ai</a>
     <small>Ajansımızın kendi siteleri</small>
-    <div class="cipler"><span>Kurumsal</span><span>Gece</span><span>Gündüz</span><span>İzmir Yaz</span><span>Paris</span></div>
-  </a>
-  <a class="klasor" href="kafe/">
-    <div class="ust"><i>☕</i>Kafe</div>
+    <div class="cipler"><a href="mapday/kurumsal">Kurumsal</a><a href="mapday/gece">Gece</a><a href="mapday/gunduz">Gündüz</a><a href="mapday/izmir">İzmir Yaz</a><a href="mapday/paris">Paris</a></div>
+  </div>
+  <div class="klasor">
+    <a class="ust" href="kafe/"><i>☕</i>Kafe</a>
     <small>3 farklı tasarım</small>
-    <div class="cipler"><span>Kurumsal</span><span>Sade</span><span>Animasyonlu</span></div>
-  </a>
-  <a class="klasor guz" href="guzellik/">
-    <div class="ust"><i>💄</i>Güzellik salonu</div>
+    <div class="cipler"><a href="kafe/kurumsal">Kurumsal</a><a href="kafe/sade">Sade</a><a href="kafe/animasyonlu">Animasyonlu</a></div>
+  </div>
+  <div class="klasor guz">
+    <a class="ust" href="guzellik/"><i>💄</i>Güzellik salonu</a>
     <small>3 farklı tasarım</small>
-    <div class="cipler"><span>Sade</span><span>Canlı</span><span>Animasyonlu</span></div>
-  </a>
-  <a class="klasor ecz" href="eczane/">
-    <div class="ust"><i>💊</i>Eczane</div>
+    <div class="cipler"><a href="guzellik/sade">Sade</a><a href="guzellik/canli">Canlı</a><a href="guzellik/animasyonlu">Animasyonlu</a></div>
+  </div>
+  <div class="klasor ecz">
+    <a class="ust" href="eczane/"><i>💊</i>Eczane</a>
     <small>WhatsApp "ilacınız geldi" asistanı demosu</small>
-  </a>
+  </div>
 </main>
 </body>
 </html>
